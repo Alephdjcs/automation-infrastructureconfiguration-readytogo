@@ -1,10 +1,9 @@
-README
+# Infrastructure
 
-# Infraestructura
+## Logical Architecture Diagram
 
-## Diagrama lógico
 ```mermaid
 graph TD
-    Terraform[Terraform config] -->|Provisiona| VM[VM en GCP/AWS]
-    VM --> Ansible[Ansible roles de configuración]
-    Ansible -->|Hardening & Setup| Servers[Servidores configurados]
+    Terraform[Terraform Configuration] -->|Provisions| VM[Cloud VM (GCP/AWS)]
+    VM --> Ansible[Ansible Configuration Roles]
+    Ansible -->|Hardening & Setup| Servers[Configured & Secured Servers]
