@@ -1,0 +1,14 @@
+
+baseline_swappiness: 30
+
+baseline_packages:
+  - git
+  - curl
+  - wget
+  - vim
+  - nano
+  - net-tools
+  - htop
+  - unzip
+  - tree
+

@@ -1,0 +1,34 @@
+---
+- name: System healthcheck
+  hosts: all
+  become: false
+
+  tasks:
+
+    - name: Check hostname
+      ansible.builtin.command: hostname
+      register: hostname_out
+      changed_when: false
+
+    - name: Print hostname
+      ansible.builtin.debug:
+        var: hostname_out.stdout
+
+    - name: Check memory usage
+      ansible.builtin.command: free -h
+      register: memory_out
+      changed_when: false
+
+    - name: Print memory usage
+      ansible.builtin.debug:
+        var: memory_out.stdout_lines
+
+    - name: Check disk usage
+      ansible.builtin.command: df -h
+      register: disk_out
+      changed_when: false
+
+    - name: Print disk usage
+      ansible.builtin.debug:
+        var: disk_out.stdout_lines
+
