@@ -5,3 +5,4 @@
 
   roles:
     - os_baseline
+    - security_hardening
