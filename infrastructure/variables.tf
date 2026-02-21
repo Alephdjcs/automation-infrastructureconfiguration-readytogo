@@ -7,3 +7,9 @@ variable "project_name" {
   type    = string
   default = "automation-ready-to-go"
 }
+
+variable "environment" {
+  type        = string
+  description = "Target environment (dev, test, prod)"
+  default     = "dev"
+}
