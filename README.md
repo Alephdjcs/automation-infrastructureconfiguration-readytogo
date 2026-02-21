@@ -61,7 +61,20 @@ graph TD
     Env --> P["🔴 Prod"]
 ```
 
-## 🚀 Automation Suite
+💻 Hybrid Usage: Workstation vs. Cloud
+
+This repository is designed to be platform-agnostic. You can use it to provision remote cloud infrastructure or to set up a brand-new local development machine.
+🏠 Local Workstation Setup
+
+If you just installed a fresh Ubuntu on your laptop and want to install all DevOps tools (Docker, Terraform, Git, etc.):
+Bash
+
+cd configuration
+ansible-playbook local_workstation.yml --ask-become-pass
+
+☁️ AWS Cloud Deployment
+
+To provision the full VPC, EC2 instance, and configure K8s/Docker remotely:
 
 I have simplified the deployment lifecycle into two master scripts:
 
@@ -147,11 +160,9 @@ The user does not need to:
 * **K8s:** Installs `kubeadm`, `kubectl`, and `kubelet`.
 
 ---
+## Note
+* SSH Access: The Security Group automatically fetches your current public IP to restrict SSH access. If your network changes, just re-run ./deploy.sh to update the firewall rules.
+* Storage: The instances use GP3 EBS volumes by default for a better price/performance ratio than standard GP2.
+* Cleanup: Always use ./destroy.sh [env] to avoid unexpected AWS costs.
 
-## 🏥 Health Check
-To verify system health:
-```bash
-ansible-playbook playbooks/healthcheck.yml -i inventories/dev/hosts.ini
-```
-
-**Maintainer:** [@Alephdjcs](https://github.com/Alephdjcs)
+### Maintainer:** [@Alephdjcs](https://github.com/Alephdjcs)
