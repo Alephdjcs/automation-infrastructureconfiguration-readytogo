@@ -1,8 +1,6 @@
 ---
-- name: Update and upgrade system
-  ansible.builtin.apt:
-    update_cache: true
-    upgrade: dist
+- name: Load OS specific tasks
+  ansible.builtin.include_tasks: "{{ ansible_os_family | lower }}.yml"
 
 - name: Set swappiness
   ansible.builtin.sysctl:
@@ -11,11 +9,7 @@
     sysctl_set: true
     state: present
     reload: true
-
-- name: Install baseline packages
-  ansible.builtin.apt:
-    name: "{{ baseline_packages }}"
-    state: present
+  tags: [sysctl, optimization]
 
 - name: Verify swappiness value
   ansible.builtin.command: sysctl vm.swappiness
@@ -34,4 +28,3 @@
 - name: Print git version
   ansible.builtin.debug:
     var: git_version.stdout
-

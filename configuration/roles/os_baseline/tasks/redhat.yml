@@ -1,0 +1,11 @@
+---
+- name: Update dnf cache
+  ansible.builtin.dnf:
+    update_cache: yes
+  tags: [dnf, update]
+
+- name: Install baseline packages (RedHat family)
+  ansible.builtin.dnf:
+    name: "{{ baseline_packages }}"
+    state: present
+  tags: [packages]
