@@ -100,7 +100,6 @@ Located in `/configuration`, featuring reusable roles:
 ---
 
 ## Getting Started
-
 ### 1️ Prerequisites
 * AWS account with a Key Pair named `my-aws-key`.
 * Local AWS credentials configured (`aws configure`).
