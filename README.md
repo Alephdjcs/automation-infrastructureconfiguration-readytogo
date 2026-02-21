@@ -22,101 +22,98 @@
 * [Core Roles](#-core-roles-detail)
 
 ---
-🏗 Architecture Overview
+## 🏗️ Architecture Overview
 
-The project follows a logical top-down flow from initial code development to environment-specific deployment:
-Code snippet
+The workflow follows a top-down approach: Terraform builds the "house" (VPC, Security, VM), and Ansible "furnishes" it (OS Setup, Docker, Kubernetes).
 
 ---
 
 ```mermaid
 graph TD
-    Developer["👨‍💻 Developer"] --> Terraform["🏗️ Terraform Layer<br/>(Provisioning)"]
-    
-    Terraform -->|Provisions| Cloud["☁️ Infrastructure<br/>(AWS · GCP · Azure · VMware)"]
-    
-    Cloud --> Ansible["🛠️ Ansible Layer<br/>(Configuration)"]
+    %% Entry Point
+    DevOps["👨‍💻 DevOps Engineer"] --> Scripts["🚀 Automation Layer<br/>(deploy.sh / destroy.sh)"]
+
+    %% Infrastructure Phase
+    Scripts --> TF["🏗️ Terraform Layer<br/>(Provisioning)"]
+    TF --> Modules["📦 Terraform Modules<br/>(Networking · Security · Compute)"]
+    Modules --> AWS["☁️ AWS Infrastructure"]
+
+    %% The Bridge
+    TF -->|Auto-generates| Inventory["🗂️ Dynamic Inventory<br/>(hosts.ini)"]
+
+    %% Configuration Phase
+    Scripts --> Ansible["🛠️ Ansible Layer<br/>(Configuration)"]
+    Inventory --> Ansible
     
     Ansible --> Roles["📦 Reusable Roles"]
     
-    Roles --> Baseline["🔹 Baseline"]
-    Roles --> Hardening["🛡️ Security Hardening"]
-    Roles --> Health["🏥 Health Check"]
-    Roles --> Docker["🐳 Docker Engine"]
+    %% Specific Roles
+    Roles --> TF_Inst["🔹 Terraform Install"]
+    Roles --> Base["🔹 OS Baseline"]
+    Roles --> Hard["🛡️ Security Hardening"]
+    Roles --> Dock["🐳 Docker Engine"]
     Roles --> K8s["☸️ Kubernetes Setup"]
     
-    Baseline & Hardening & Health & Docker & K8s --> Inventories["🗂️ Inventories"]
+    %% Environment Delivery
+    Base & Hard & Dock & K8s --> Env["🚀 Target Environments"]
+    Env --> D["🟢 Dev"]
+    Env --> T["🟡 Test"]
+    Env --> P["🔴 Prod"]
+```
+
+## 🚀 Automation Suite
+
+I have simplified the deployment lifecycle into two master scripts:
+
+* **`./deploy.sh`**: 
+    1. Runs `terraform apply`.
+    2. Dynamically generates the `hosts.ini` inventory.
+    3. Executes the full Ansible suite (Baseline + Security + Docker).
+* **`./destroy.sh`**: 
+    1. Runs `terraform destroy`.
+    2. Cleans up local inventory files to prevent IP conflicts.
+       
     
-    Inventories --> Dev["🟢 Dev"]
-    Inventories --> Test["🟡 Test"]
-    Inventories --> Prod["🔴 Prod"]
-```
+## 📂 Project Structure
 
+### 🏗️ Infrastructure Layer (Terraform)
+Located in `/infrastructure`, organized by isolated modules:
+* **Networking**: Manages VPC, Public Subnets, Internet Gateway, and Route Tables.
+* **Security**: Defines Security Groups (Stateful Firewalls) for SSH (22) and HTTP (80).
+* **Compute**: Handles EC2 Instance provisioning (Ubuntu 22.04 LTS) and SSH Key associations.
+* **Templates**: Uses `.tftpl` to auto-generate Ansible-ready inventory files.
 
-## 🏗️ Infrastructure Layer (Terraform)
-
-The infrastructure is managed using a modular approach in AWS, ensuring scalability and separation of concerns.
-
-### 📂 Directory Structure
-```text
-infrastructure/
-├── main.tf                    # Main entry point (calls modules)
-├── providers.tf               # AWS Provider configuration
-├── variables.tf               # Global variables (Region, Project Name)
-├── outputs.tf                 # Public IP and resource outputs
-├── templates/                 # Templates for dynamic files
-│   └── ansible_inventory.tftpl # Auto-generates Ansible hosts.ini
-└── modules/                   # Isolated infrastructure components
-    ├── networking/            # VPC, Subnets, IGW, Route Tables
-    ├── security/              # Security Groups (Firewalls)
-    └── compute/               # EC2 Instances (Ubuntu)
-```
-
-
-
-## 🛠️ Configuration Layer (Ansible)
-
-The Ansible layer is designed to be OS-agnostic and environment-aware.
-
-### 📂 Directory Structure
-```text
-configuration/
-├── ansible.cfg                # Global Ansible settings
-├── inventories/               # Environment-specific host management
-│   ├── dev | test | prod      # Host files and group variables
-├── playbooks/                 # Orchestration of execution flows
-│   ├── baseline.yml           # Initial OS setup
-│   ├── docker.yml             # Docker Engine deployment
-│   ├── k8s_setup.yml          # Kubernetes node installation
-│   └── healthcheck.yml        # System status verification
-└── roles/                     # Modular, reusable logic
-    ├── os_baseline/           # Multi-OS setup (Debian/RedHat)
-    ├── docker/                # Docker installation & services
-    ├── kubernetes/            # K8s binaries & networking
-    └── security_hardening/    # Security policies & SSH hardening
-```
+### ⚙️ Configuration Layer (Ansible)
+Located in `/configuration`, featuring reusable roles:
+* **`terraform_install`**: Prepares the Control Node with HashiCorp tools.
+* **`os_baseline`**: Multi-OS support (Debian/RedHat) for updates and essential tools (Git, Vim, Curl).
+* **`security_hardening`**: Hardens SSH access and disables insecure root logins.
+* **`docker`**: Automated installation of Docker Engine and Compose.
+* **`kubernetes`**: Pre-configures nodes with Kubeadm, Kubectl, and Kubelet.
+  
 
 ---
 
 ## Getting Started
 
 ### 1️ Prerequisites
-Install Ansible on your control node:
+* AWS account with a Key Pair named `my-aws-key`.
+* Local AWS credentials configured (`aws configure`).
+* Private key permissions: `chmod 400 ~/.ssh/my-aws-key.pem`.
+* Install Ansible on your control node:
 ```bash
 sudo apt update && sudo apt install ansible -y
 ```
 
 ### 2️Inventory Configuration
-Define your target hosts in `inventories/dev/hosts.ini`:
-```ini
-[all]
-192.168.1.50 ansible_user=adminops
-```
-
-### 3️Running Playbooks
 ```bash
-cd configuration
-ansible-playbook playbooks/baseline.yml -i inventories/dev/hosts.ini -K
+# Clone the repository
+git clone [https://github.com/Alephdjcs/automation-infrastructureconfiguration-readytogo.git](https://github.com/Alephdjcs/automation-infrastructureconfiguration-readytogo.git)
+cd automation-infrastructureconfiguration-readytogo
+
+# Launch the entire stack
+./deploy.sh
+
 ```
 
 ---
