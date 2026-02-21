@@ -1,4 +1,4 @@
-🚀 Automation Infrastructure Configuration (Ready-to-Go)
+Automation Infrastructure Configuration (Ready-to-Go) by Danilo Cerdas S 
 
 This repository provides a structured Infrastructure as Code (IaC) framework using Terraform for provisioning and Ansible for configuration management.
 
@@ -8,6 +8,9 @@ This repository provides a structured Infrastructure as Code (IaC) framework usi
 The project follows a logical top-down flow from initial code development to environment-specific deployment:
 Code snippet
 
+---
+
+```mermaid
 graph TD
     Developer["👨‍💻 Developer"] --> Terraform["🏗️ Terraform Layer<br/>(Provisioning)"]
     
@@ -28,13 +31,14 @@ graph TD
     Inventories --> Dev["🟢 Dev"]
     Inventories --> Test["🟡 Test"]
     Inventories --> Prod["🔴 Prod"]
+```
 
-🛠️ Configuration Layer (Ansible)
+## 🛠️ Configuration Layer (Ansible)
 
-The Ansible layer is designed to be OS-agnostic and environment-aware, allowing for seamless scaling.
-Directory Structure
-Plaintext
+The Ansible layer is designed to be OS-agnostic and environment-aware.
 
+### 📂 Directory Structure
+```text
 configuration/
 ├── ansible.cfg                # Global Ansible settings
 ├── inventories/               # Environment-specific host management
@@ -49,81 +53,54 @@ configuration/
     ├── docker/                # Docker installation & services
     ├── kubernetes/            # K8s binaries & networking
     └── security_hardening/    # Security policies & SSH hardening
+```
 
-🚀 Getting Started
-1. Prerequisites
+---
 
-Install Ansible on your control node (Ubuntu example):
-Bash
+## Getting Started
 
+### 1️ Prerequisites
+Install Ansible on your control node:
+```bash
 sudo apt update && sudo apt install ansible -y
-ansible --version
+```
 
-2. Inventory Configuration
-
-Define your target hosts in inventories/dev/hosts.ini.
-
-For remote deployment:
-Ini, TOML
-
+### 2️Inventory Configuration
+Define your target hosts in `inventories/dev/hosts.ini`:
+```ini
 [all]
 192.168.1.50 ansible_user=adminops
+```
 
-For local testing:
-Ini, TOML
-
-[all]
-127.0.0.1 ansible_connection=local
-
-3. Running Playbooks
-
-Run the baseline configuration to prepare your servers:
-Bash
-
+### 3️Running Playbooks
+```bash
 cd configuration
 ansible-playbook playbooks/baseline.yml -i inventories/dev/hosts.ini -K
+```
 
-📦 Core Roles Detail
-🔹 os_baseline
+---
 
-Prepares the operating system regardless of the distribution.
+## Core Roles Detail
 
-    Multi-OS Support: Automatically detects Debian or RedHat families.
+### 🔹 os_baseline
+Prepares the operating system. Automatically detects `Debian` or `RedHat`.
+* **Actions:** Updates cache, installs tools (`git`, `vim`, `curl`), and optimizes **swappiness**.
 
-    Actions: Updates cache, installs essential tools (git, vim, curl, htop), and optimizes kernel parameters like swappiness.
+### 🔹 security_hardening
+* Disables `root` login via SSH.
+* Limits authentication attempts.
+* Configures SSH Grace Time.
 
-🔹 security_hardening
+### 🔹 kubernetes & docker
+* **Docker:** Installs engine and manages user groups.
+* **K8s:** Installs `kubeadm`, `kubectl`, and `kubelet`.
 
-Applies security best practices to protect the server:
+---
 
-    Disables root login via SSH.
-
-    Limits authentication attempts.
-
-    Configures SSH Grace Time and password authentication policies.
-
-🔹 kubernetes & docker
-
-    Docker: Installs the engine, manages user groups, and ensures the daemon is active.
-
-    K8s: Installs kubeadm, kubectl, and kubelet. It also applies necessary kernel modules (overlay, br_netfilter) and pins package versions to prevent accidental upgrades.
-
-🏥 Health Check
-
-To verify system health after configuration, run:
-Bash
-
+## 🏥 Health Check
+To verify system health:
+```bash
 ansible-playbook playbooks/healthcheck.yml -i inventories/dev/hosts.ini
+```
 
-Checks performed: Hostname verification, RAM usage, and available disk space.
-🧠 Design Principles
-
-    Idempotency: Playbooks can be run multiple times without unintended side effects.
-
-    Zero Secrets: No passwords or tokens are stored in plain text (use ansible-vault).
-
-    Modularity: Roles are independent and can be combined into various playbooks as needed.
-
-Maintainer: @Alephdjcs
-
-License: MIT
+**Maintainer:** [@Alephdjcs](https://github.com/Alephdjcs)
