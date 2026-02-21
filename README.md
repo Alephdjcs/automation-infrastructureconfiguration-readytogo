@@ -66,15 +66,13 @@ graph TD
 I have simplified the deployment lifecycle into two master scripts:
 
 To deploy to DEV (default/local):
-./deploy.sh
-
+* ./deploy.sh
 To deploy to TEST:
-./deploy.sh test
-
+* ./deploy.sh test
 To deploy to PROD:
-./deploy.sh prod
+* ./deploy.sh prod
 
-* **`./destroy.sh`**: 
+* **`./destroy.sh + DEV/TEST/PROD`**: 
     1. Runs `terraform destroy`.
     2. Cleans up local inventory files to prevent IP conflicts.
        
