@@ -1,17 +1,29 @@
 #!/bin/bash
 set -e
 
-echo -e "\n\033[1;31m🔥 WARNING: Starting Infrastructure Destruction...\033[0m"
+# Usage: ./destroy.sh [dev|test|prod]
+ENV=${1:-dev}
+
+echo -e "\n\033[1;31m🔥 WARNING: Starting Destruction of Environment: $ENV\033[0m"
+echo -e "\033[1;31mThis will terminate all AWS resources associated with $ENV.\033[0m"
+read -p "Are you sure you want to continue? (y/n) " -n 1 -r
+echo
+if [[ ! $REPLY =~ ^[Yy]$ ]]
+then
+    echo "Destruction cancelled."
+    exit 1
+fi
 
 cd infrastructure
 
-# Run terraform destroy
-terraform destroy -auto-approve
+# Run terraform destroy targeting the specific environment
+terraform destroy -var="environment=$ENV" -auto-approve
 
-echo -e "\n\033[1;32m🧹 Cleaning up local inventory files...\033[0m"
+echo -e "\n\033[1;32m🧹 Cleaning up $ENV inventory file...\033[0m"
 
-# Optional: Reset the dev inventory to a clean state
-echo "[local]" > ../configuration/inventories/dev/hosts.ini
-echo "127.0.0.1 ansible_connection=local" >> ../configuration/inventories/dev/hosts.ini
+# Reset the specific environment inventory to a clean state
+INVENTORY_PATH="../configuration/inventories/$ENV/hosts.ini"
+echo "[$ENV]" > $INVENTORY_PATH
+echo "# Inventory cleaned after destruction" >> $INVENTORY_PATH
 
-echo -e "\n\033[1;35m✅ All resources have been terminated and local files cleaned.\033[0m"
+echo -e "\n\033[1;35m✅ $ENV resources terminated and inventory cleaned.\033[0m"
