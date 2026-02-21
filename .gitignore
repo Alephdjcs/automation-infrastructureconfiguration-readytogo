@@ -1,9 +1,115 @@
+########################################
+# OS / System
+########################################
+.DS_Store
+Thumbs.db
+
+########################################
+# Editors
+########################################
+
+# VSCode
+.vscode/
+*.code-workspace
+
+# JetBrains
+.idea/
+*.iml
+
 # Vim
 *.swp
 *.swo
-*.swn
 *.swm
-*.log
-*.retry
-__pycache__/
+*~
+Session.vim
 
+########################################
+# Logs
+########################################
+*.log
+logs/
+nohup.out
+
+########################################
+# Ansible
+########################################
+*.retry
+*.retry
+ansible.cfg.bak
+inventory.bak
+
+# Molecule
+.molecule/
+
+########################################
+# Terraform
+########################################
+.terraform/
+*.tfstate
+*.tfstate.backup
+crash.log
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+
+# Terraform lock file (keep if needed)
+# .terraform.lock.hcl
+
+########################################
+# Packages / Binaries
+########################################
+*.deb
+*.rpm
+*.tar
+*.tar.gz
+*.tgz
+*.zip
+*.iso
+*.img
+
+########################################
+# Kubernetes
+########################################
+kubeconfig
+*.kubeconfig
+
+########################################
+# Python
+########################################
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.venv/
+venv/
+env/
+
+########################################
+# Docker
+########################################
+docker-compose.override.yml
+
+########################################
+# Secrets
+########################################
+*.pem
+*.key
+*.crt
+*.p12
+*.pfx
+id_rsa
+id_ed25519
+.env
+.env.*
+
+########################################
+# Node
+########################################
+node_modules/
+package-lock.json
+########################################
+
+coverage/
+dist/
+build/
