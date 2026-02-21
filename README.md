@@ -52,6 +52,28 @@ graph TD
     Inventories --> Prod["🔴 Prod"]
 ```
 
+
+## 🏗️ Infrastructure Layer (Terraform)
+
+The infrastructure is managed using a modular approach in AWS, ensuring scalability and separation of concerns.
+
+### 📂 Directory Structure
+```text
+infrastructure/
+├── main.tf                    # Main entry point (calls modules)
+├── providers.tf               # AWS Provider configuration
+├── variables.tf               # Global variables (Region, Project Name)
+├── outputs.tf                 # Public IP and resource outputs
+├── templates/                 # Templates for dynamic files
+│   └── ansible_inventory.tftpl # Auto-generates Ansible hosts.ini
+└── modules/                   # Isolated infrastructure components
+    ├── networking/            # VPC, Subnets, IGW, Route Tables
+    ├── security/              # Security Groups (Firewalls)
+    └── compute/               # EC2 Instances (Ubuntu)
+```
+
+
+
 ## 🛠️ Configuration Layer (Ansible)
 
 The Ansible layer is designed to be OS-agnostic and environment-aware.
@@ -100,9 +122,11 @@ ansible-playbook playbooks/baseline.yml -i inventories/dev/hosts.ini -K
 ---
 
 ## Core Roles Detail
+### 🔹 terraform_install
+* Prepares the Control Node by adding the official HashiCorp repository and installing the Terraform CLI.
 
 ### 🔹 os_baseline
-Prepares the operating system. Automatically detects `Debian` or `RedHat`.
+* Prepares the operating system. Automatically detects `Debian` or `RedHat`.
 * **Actions:** Updates cache, installs tools (`git`, `vim`, `curl`), and optimizes **swappiness**.
 
 ### 🔹 security_hardening
