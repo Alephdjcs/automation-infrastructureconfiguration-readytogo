@@ -65,10 +65,15 @@ graph TD
 
 I have simplified the deployment lifecycle into two master scripts:
 
-* **`./deploy.sh`**: 
-    1. Runs `terraform apply`.
-    2. Dynamically generates the `hosts.ini` inventory.
-    3. Executes the full Ansible suite (Baseline + Security + Docker).
+To deploy to DEV (default/local):
+./deploy.sh
+
+To deploy to TEST:
+./deploy.sh test
+
+To deploy to PROD:
+./deploy.sh prod
+
 * **`./destroy.sh`**: 
     1. Runs `terraform destroy`.
     2. Cleans up local inventory files to prevent IP conflicts.
@@ -99,7 +104,10 @@ Located in `/configuration`, featuring reusable roles:
 ### 1️ Prerequisites
 * AWS account with a Key Pair named `my-aws-key`.
 * Local AWS credentials configured (`aws configure`).
-* Private key permissions: `chmod 400 ~/.ssh/my-aws-key.pem`.
+* Private key permissions: `chmod 400 ~/.ssh/my-aws-key.pem`, the .pem file must be at ~/.ssh/my-aws-key.pem for the Ansible inventory template to work.
+* infrastructure/terraform.tfvars: To change the aws_region or project_name
+* Currently using t2.micro. If you need more power for Kubernetes, you might want to change it to t3.medium.
+* disable_password_auth: false : This is the safest way to start. If you change this to true before confirming their SSH Key works, you could lock yourself out forever.
 * Install Ansible on your control node:
 ```bash
 sudo apt update && sudo apt install ansible -y
@@ -115,7 +123,13 @@ cd automation-infrastructureconfiguration-readytogo
 ./deploy.sh
 
 ```
+The user does not need to:
 
+    Install Terraform (Ansible installs it on the first step).
+    Create the VPC or Subnets (Terraform does it).
+    Manually copy IP addresses (The local_file bridge handles the inventory).
+    Install Docker or K8s (Ansible roles handle it).
+    
 ---
 
 ## Core Roles Detail
