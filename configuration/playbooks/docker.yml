@@ -1,0 +1,6 @@
+---
+- name: Install and Configure Docker Engine
+  hosts: all
+  become: yes
+  roles:
+    - docker
