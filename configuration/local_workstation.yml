@@ -1,0 +1,18 @@
+---
+- name: Local Machine Provisioning
+  hosts: localhost
+  connection: local
+  become: yes
+
+  vars:
+    # I have set these to false so you don't lock yourself out of your own laptop
+    disable_root_login: false
+    disable_password_auth: false
+    # Tells roles they are running locally
+    is_local_setup: true
+
+  roles:
+    - os_baseline        # Installs git, vim, curl, etc.
+    - terraform_install  # Installs Terraform
+    - docker             # Installs Docker engine
+    - kubernetes

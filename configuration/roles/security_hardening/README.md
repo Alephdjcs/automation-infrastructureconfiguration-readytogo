@@ -1,38 +1,18 @@
-Role Name
-=========
+# Role: Security Hardening
 
-A brief description of the role goes here.
+This role applies a security baseline to Ubuntu instances used for Docker and Kubernetes workloads.
 
-Requirements
-------------
+## Actions Performed
+1. **System Updates**: Ensures all packages are up to date.
+2. **SSH Hardening**: Disables password authentication (Key-based only).
+3. **Firewall Baseline**: Ensures basic UFW (Uncomplicated Firewall) rules are ready.
+4. **Essential Packages**: Installs `curl`, `git`, and `unzip`.
 
-Any pre-requisites that may not be covered by Ansible itself or the role should be mentioned here. For instance, if the role uses the EC2 module, it may be a good idea to mention in this section that the boto package is required.
+## Role Variables
+- `ssh_user`: The user used for SSH connections (default: ubuntu).
 
-Role Variables
---------------
+## Usage
+This role is called automatically by the main playbook during the infrastructure deployment phase.
 
-A description of the settable variables for this role should go here, including any variables that are in defaults/main.yml, vars/main.yml, and any variables that can/should be set via parameters to the role. Any variables that are read from other roles and/or the global scope (ie. hostvars, group vars, etc.) should be mentioned here as well.
-
-Dependencies
-------------
-
-A list of other roles hosted on Galaxy should go here, plus any details in regards to parameters that may need to be set for other roles, or variables that are used from other roles.
-
-Example Playbook
-----------------
-
-Including an example of how to use your role (for instance, with variables passed in as parameters) is always nice for users too:
-
-    - hosts: servers
-      roles:
-         - { role: username.rolename, x: 42 }
-
-License
--------
-
-BSD
-
-Author Information
-------------------
-
-An optional section for the role authors to include contact information, or a website (HTML is not allowed).
+**Author:** Danilo Cerdas
+**License:** MIT
