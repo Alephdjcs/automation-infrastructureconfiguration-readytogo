@@ -13,3 +13,7 @@ variable "environment" {
   description = "Target environment (dev, test, prod)"
   default     = "dev"
 }
+
+variable "ssh_user" {
+  type    = string
+  default = "ubuntu" 
