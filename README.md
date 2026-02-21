@@ -1,8 +1,27 @@
-Automation Infrastructure Configuration (Ready-to-Go) by Danilo Cerdas S 
+<div align="center">
 
-This repository provides a structured Infrastructure as Code (IaC) framework using Terraform for provisioning and Ansible for configuration management.
+# 🚀 Automation Infrastructure Configuration
+### — *Ready-to-Go Framework* —
 
+**Developed by [Danilo Cerdas S.](https://github.com/Alephdjcs)**
 
+  <img src="https://img.shields.io/badge/Maintained%3F-yes-green.svg" alt="Maintained">
+  <img src="https://img.shields.io/badge/License-MIT-blue.svg" alt="License MIT">
+  <img src="https://img.shields.io/badge/Ansible-v2.10+-red.svg" alt="Ansible">
+  <img src="https://img.shields.io/badge/Terraform-v1.0+-purple.svg" alt="Terraform">
+  <img width="31" height="91" alt="image" src="https://github.com/user-attachments/assets/22a203fd-efdf-4dee-8be3-61139e2e4759" />
+</p>
+</div>
+
+> **A structured Infrastructure as Code (IaC) framework.** > This project leverages **Terraform** for the provisioning layer and **Ansible** for the configuration management layer, ensuring a clean, modular, and production-ready foundation.
+---
+## 📖 Table of Contents
+* [Architecture Overview](#-architecture-overview)
+* [Configuration Layer](#-configuration-layer-ansible)
+* [Getting Started](#-getting-started)
+* [Core Roles](#-core-roles-detail)
+
+---
 🏗 Architecture Overview
 
 The project follows a logical top-down flow from initial code development to environment-specific deployment:
