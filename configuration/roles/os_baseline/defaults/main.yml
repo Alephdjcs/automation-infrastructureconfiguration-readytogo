@@ -1,5 +1,5 @@
 
-baseline_swappiness: 60
+baseline_swappiness: 5
 
 baseline_packages:
   - git

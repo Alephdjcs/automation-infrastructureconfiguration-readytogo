@@ -1,0 +1,8 @@
+---
+- name: Setup Control Node Tools
+  hosts: localhost
+  connection: local
+  become: yes
+
+  roles:
+    - terraform_install
