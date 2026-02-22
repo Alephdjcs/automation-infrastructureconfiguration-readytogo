@@ -13,16 +13,20 @@
 </p>
 </div>
 
-> **A structured Infrastructure as Code (IaC) framework.** > This project leverages **Terraform** for the provisioning layer and **Ansible** for the configuration management layer, ensuring a clean, modular, and production-ready foundation.
+> **A structured Infrastructure as Code (IaC) framework.**
+>  This project leverages **Terraform** for the provisioning layer and **Ansible** for the configuration management layer, ensuring a clean, modular, and production-ready foundation.
+
+### Official Documentation of this project by [DeepWiki_DocumentationGenerator](https://deepwiki.com/Alephdjcs/automation-infrastructureconfiguration-readytogo)
 ---
-## 📖 Table of Contents
+
+## Table of Contents
 * [Architecture Overview](#-architecture-overview)
 * [Configuration Layer](#-configuration-layer-ansible)
 * [Getting Started](#-getting-started)
 * [Core Roles](#-core-roles-detail)
 
 ---
-## 🏗️ Architecture Overview
+## Architecture Overview
 
 The workflow follows a top-down approach: Terraform builds the "house" (VPC, Security, VM), and Ansible "furnishes" it (OS Setup, Docker, Kubernetes).
 
@@ -61,7 +65,7 @@ graph TD
     Env --> P["🔴 Prod"]
 ```
 
-💻 Hybrid Usage: Workstation vs. Cloud
+### Hybrid Usage: Workstation vs. Cloud
 
 This repository is designed to be platform-agnostic. You can use it to provision remote cloud infrastructure or to set up a brand-new local development machine.
 🏠 Local Workstation Setup
