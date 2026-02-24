@@ -1,6 +1,6 @@
 #!/bin/bash
 set -e
-
+set -o pipefail
 # Usage: ./deploy.sh [dev|test|prod]
 ENV=${1:-dev}
 
