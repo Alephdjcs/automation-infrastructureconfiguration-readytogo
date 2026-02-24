@@ -16,3 +16,7 @@
     - terraform_install  # Installs Terraform
     - docker             # Installs Docker engine
     - kubernetes
+    - security_hardening
+    - healtcheck.yml
+    
+    
