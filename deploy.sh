@@ -1,42 +1,53 @@
 #!/bin/bash
-set -e
-set -o pipefail
-# Usage: ./deploy.sh [dev|test|prod]
+
+set -euo pipefail
+trap 'echo -e "\n\033[1;31m DEPLOYMENT FAILED AT LINE $LINENO\033[0m"' ERR # ----> It give the error message wherever it fails
+
+# ------------------------------
+# Validate Environment--->This will pass to teerraform eventually is better to limit the options
+# ------------------------------
 ENV=${1:-dev}
+[[ "$ENV" =~ ^(dev|test|prod)$ ]] || { 
+  echo "Invalid environment: $ENV (use dev|test|prod)"
+  exit 1
+}
 
-echo -e "\n\033[1;34m🚀 TARGETING ENVIRONMENT: $ENV\033[0m"
+echo -e "\n\033[1;34m TARGETING ENVIRONMENT: $ENV\033[0m"
 
-# Ansible automation settings
 export ANSIBLE_HOST_KEY_CHECKING=False
 
-# --- PHASE 1: INFRASTRUCTURE PROVISIONING ---
-echo -e "\n\033[1;34m🏗️  PHASE 1: Terraform ($ENV)\033[0m"
-cd infrastructure
-terraform init
-terraform apply -var="environment=$ENV" -auto-approve
+# ------------------------------
+# PHASE 0 – Bootstrap Control Node
+# ------------------------------
+echo -e "\n\033[1;34m PHASE 0: Preparing Control Node\033[0m"
+ansible-playbook configuration/playbooks/terraform.yml -i "localhost," -c local
 
-# Go back to root to handle paths correctly
+# ------------------------------
+# PHASE 1 – Infrastructure Provisioning
+# ------------------------------
+echo -e "\n\033[1;34m PHASE 1: Terraform ($ENV)\033[0m"
+cd infrastructure
+terraform init -upgrade
+terraform plan -var="environment=$ENV" -out=tfplan
+terraform apply -auto-approve tfplan
 cd ..
 
-# --- PHASE 2: CONNECTIVITY CHECK ---
+# ------------------------------
+# PHASE 2 – Connectivity Check
+# ------------------------------
 INVENTORY="configuration/inventories/$ENV/hosts.ini"
 
-echo -e "\n\033[1;33m⏳ Waiting for SSH to be ready on $ENV instance...\033[0m"
-# Instead of a blind sleep, wait for the host to respond (max 300s)
+echo -e "\n\033[1;33m Waiting for SSH...\033[0m"
 ansible all -i "$INVENTORY" -m wait_for_connection -a "timeout=300"
 
-# --- PHASE 3: CONFIGURATION MANAGEMENT ---
-echo -e "\n\033[1;34m🛠️  PHASE 3: Ansible ($ENV)\033[0m"
-cd configuration
+# ------------------------------
+# PHASE 3 – Configuration Management
+# ------------------------------
+echo -e "\n\033[1;34m PHASE 3: Ansible Configuration\033[0m"
 
-# 1. Setup Control Node Tools (Localhost)
-# The "-i localhost," forces local execution and avoids SSH attempts to yourself
-ansible-playbook playbooks/terraform.yml -i "localhost," -c local
-
-# 2. Run Playbooks on Target Infrastructure
-ansible-playbook playbooks/baseline.yml -i "$INVENTORY"
-ansible-playbook playbooks/docker.yml -i "$INVENTORY"
-ansible-playbook playbooks/k8s_setup.yml -i "$INVENTORY"
-ansible-playbook playbooks/healthcheck.yml -i "$INVENTORY"
+ansible-playbook configuration/playbooks/baseline.yml -i "$INVENTORY"
+ansible-playbook configuration/playbooks/docker.yml -i "$INVENTORY"
+ansible-playbook configuration/playbooks/k8s_setup.yml -i "$INVENTORY"
+ansible-playbook configuration/playbooks/healthcheck.yml -i "$INVENTORY"
 
 echo -e "\n\033[1;35m✅ $ENV DEPLOYMENT COMPLETE!\033[0m"
