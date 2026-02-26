@@ -1,0 +1,62 @@
+---
+- name: ArgoCD - Create Namespace
+  kubernetes.core.k8s:
+    name: argocd
+    api_version: v1
+    kind: Namespace
+    state: present
+
+- name: ArgoCD - Install via Manifest
+  kubernetes.core.k8s:
+    state: present
+    namespace: argocd
+    src: https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
+
+- name: ArgoCD - Wait for API Server
+  kubernetes.core.k8s_info:
+    kind: Deployment
+    name: argocd-server
+    namespace: argocd
+  register: argocd_server_status
+  until: argocd_server_status.resources[0].status.readyReplicas | default(0) | int >= 1
+  retries: 20
+  delay: 10
+
+- name: ArgoCD - Get Initial Admin Password
+  kubernetes.core.k8s_info:
+    kind: Secret
+    name: argocd-initial-admin-secret
+    namespace: argocd
+  register: argocd_secret
+
+- name: ArgoCD - Security Warning and Credentials
+  ansible.builtin.debug:
+    msg: 
+      - "------------------------------------------------------------"
+      - "ARGO CD INSTALLATION DETAILS"
+      - "------------------------------------------------------------"
+      - "Admin Password: {{ argocd_secret.resources[0].data.password | b64decode }}"
+      - ""
+      - "WARNING: This is a temporary bootstrap password."
+      - "ACTION REQUIRED: You must reset this password after login."
+      - "SECURITY: Delete the secret 'argocd-initial-admin-secret' once updated."
+      - "------------------------------------------------------------"
+
+- name: ArgoCD - Patch Service to NodePort
+  kubernetes.core.k8s:
+    state: patched
+    kind: Service
+    name: argocd-server
+    namespace: argocd
+    definition:
+      spec:
+        type: NodePort
+
+- name: ArgoCD - Get NodePort
+  ansible.builtin.shell: "kubectl get svc argocd-server -n argocd -o jsonpath='{.spec.ports[0].nodePort}'"
+  register: argocd_port
+  changed_when: false
+
+- name: ArgoCD - Access Info
+  ansible.builtin.debug:
+    msg: "Access ArgoCD at: https://{{ ansible_host | default('localhost') }}:{{ argocd_port.stdout }}"
