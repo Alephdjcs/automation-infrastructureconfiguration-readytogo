@@ -1,0 +1,59 @@
+---
+# 1. OS & Distribution Validation
+- name: "Healthcheck : Verify OS Distribution"
+  ansible.builtin.assert:
+    that: 
+      - ansible_distribution == "Ubuntu"
+      - ansible_distribution_major_version | int >= 22
+    fail_msg: "ERROR: This framework only supports Ubuntu 22.04 or higher. Found: {{ ansible_distribution }} {{ ansible_distribution_version }}"
+
+# 2. Network Latency & Connectivity
+- name: "Healthcheck : Check Internet Connectivity (Google DNS)"
+  ansible.builtin.wait_for:
+    host: 8.8.8.8
+    port: 53
+    timeout: 5
+    msg: "ERROR: No internet access. Cannot download Docker/K8s images."
+
+# 3. Smart Disk Check (Root Partition)
+- name: "Healthcheck : Get Disk Usage"
+  ansible.builtin.shell: "df / --output=pcent | tail -1 | tr -dc '0-9'"
+  register: disk_pcent
+  changed_when: false
+
+- name: "Healthcheck : Validate Disk Space"
+  ansible.builtin.assert:
+    that: disk_pcent.stdout | int < max_disk_usage | default(80)
+    fail_msg: "CRITICAL: Disk usage is at {{ disk_pcent.stdout }}%. Clean up space before proceeding."
+
+# 4. Memory & Swap Check
+- name: "Healthcheck : Get Memory Usage"
+  ansible.builtin.shell: "free | grep Mem | awk '{print $3/$2 * 100.0}' | cut -d. -f1"
+  register: mem_pcent
+  changed_when: false
+
+- name: "Healthcheck : Validate Memory"
+  ansible.builtin.assert:
+    that: mem_pcent.stdout | int < max_mem_usage | default(90)
+    fail_msg: "CRITICAL: RAM usage is too high ({{ mem_pcent.stdout }}%). Deployment might fail."
+
+# 5. Service Check (Docker)
+- name: "Healthcheck : Check Docker Service"
+  ansible.builtin.systemd:
+    name: docker
+  register: docker_service_check
+  ignore_errors: yes
+
+- name: "Healthcheck : Report Docker Status"
+  ansible.builtin.debug:
+    msg: "Docker is active and healthy"
+  when: 
+    - docker_service_check.status is defined
+    - docker_service_check.status.ActiveState == "active"
+
+# 6. Zombie Processes Check
+- name: "Healthcheck : Check for Zombie Processes"
+  ansible.builtin.shell: "ps aux | awk '{ print $8 }' | grep -c Z"
+  register: zombie_count
+  changed_when: false
+  failed_when: zombie_count.stdout | int > 5
