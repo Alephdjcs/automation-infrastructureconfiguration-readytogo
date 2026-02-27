@@ -26,16 +26,6 @@
   ansible.builtin.include_tasks: "{{ ansible_os_family | lower }}.yml"
   tags: [packages]
 
-# 3. Python Environment Setup (Fixes the ArgoCD/K8s module error)
-- name: OS Baseline - Install Kubernetes Python Libraries
-  ansible.builtin.pip:
-    name: 
-      - kubernetes
-      - pyyaml
-      - jsonpatch
-    state: present
-  tags: [python, k8s_mgmt]
-
 # 4. Final Verifications
 - name: Verify baseline configuration
   ansible.builtin.command: "{{ item }}"

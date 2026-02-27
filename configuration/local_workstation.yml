@@ -13,10 +13,10 @@
 
   roles:
     - os_baseline        # Installs git, vim, curl, etc.
-    - terraform_install  # Installs Terraform
-    - docker             # Installs Docker engine
+    - terraform_install  
+    - docker            
     - kubernetes
     - security_hardening
-    - healtcheck.yml
+    - healtcheck
     
     

@@ -11,3 +11,5 @@
     name: [kubernetes, pyyaml, jsonpatch]
     state: present
     executable: pip3
+    # This bypasses the "externally-managed-environment" error
+    extra_args: --break-system-packages

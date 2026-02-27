@@ -1,6 +1,25 @@
 ---
-- name: Disable SWAP (Required for K8s)
-  shell: |
+- name: Load required kernel modules
+  ansible.builtin.shell: |
+    modprobe overlay
+    modprobe br_netfilter
+  changed_when: false
+
+- name: Configure sysctl for Kubernetes networking
+  ansible.builtin.copy:
+    dest: /etc/sysctl.d/k8s.conf
+    content: |
+      net.bridge.bridge-nf-call-iptables  = 1
+      net.bridge.bridge-nf-call-ip6tables = 1
+      net.ipv4.ip_forward                 = 1
+  register: sysctl_config
+
+- name: Apply sysctl settings
+  ansible.builtin.command: sysctl --system
+  when: sysctl_config.changed
+
+- name: Disable SWAP (Requerido por K8s)
+  ansible.builtin.shell: |
     swapoff -a
     sed -i '/swap/d' /etc/fstab
   changed_when: false
@@ -11,33 +30,97 @@
     state: present
     update_cache: yes
 
-- name: Configure containerd (SystemdCgroup)
+- name: Configure containerd (CRI fix & SystemdCgroup)
   ansible.builtin.shell: |
     mkdir -p /etc/containerd
     containerd config default > /etc/containerd/config.toml
+    sed -i 's/disabled_plugins = \["cri"\]//g' /etc/containerd/config.toml
     sed -i 's/SystemdCgroup = false/SystemdCgroup = true/g' /etc/containerd/config.toml
   notify: restart containerd
-# --------------------
+
+- name: Ensure containerd is restarted
+  ansible.builtin.meta: flush_handlers
+
+- name: Create keyrings directory
+  ansible.builtin.file:
+    path: /etc/apt/keyrings
+    state: directory
+    mode: '0755'
 
 - name: Add Kubernetes GPG key
-  get_url:
+  ansible.builtin.get_url:
     url: https://pkgs.k8s.io/core:/stable:/v1.29/deb/Release.key
     dest: /etc/apt/keyrings/kubernetes-apt-keyring.asc
     mode: '0644'
 
 - name: Add Kubernetes repository
-  apt_repository:
+  ansible.builtin.apt_repository:
     repo: "deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.asc] https://pkgs.k8s.io/core:/stable:/v1.29/deb/ /"
     state: present
 
-- name: Install Kubernetes binaries
-  apt:
+- name: Install Kubernetes binaries (kubelet, kubeadm, kubectl)
+  ansible.builtin.apt:
     name: [kubelet, kubeadm, kubectl]
     state: present
     update_cache: yes
 
 - name: Hold Kubernetes packages
-  dpkg_selections:
+  ansible.builtin.dpkg_selections:
     name: "{{ item }}"
     selection: hold
   loop: [kubelet, kubeadm, kubectl]
+
+
+- name: Check if Kubernetes is already initialized
+  ansible.builtin.stat:
+    path: /etc/kubernetes/admin.conf
+  register: kube_conf
+
+- name: Initialize Kubernetes Cluster
+  ansible.builtin.command: >
+    kubeadm init 
+    --pod-network-cidr=10.244.0.0/16 
+    --ignore-preflight-errors=NumCPU,Mem
+  register: kubeinit
+  when: not kube_conf.stat.exists
+
+- name: Create .kube directory for adminops
+  ansible.builtin.file:
+    path: "/home/adminops/.kube"
+    state: directory
+    owner: adminops
+    group: adminops
+    mode: '0755'
+
+- name: Copy admin.conf to user's kube config
+  ansible.builtin.copy:
+    src: /etc/kubernetes/admin.conf
+    dest: "/home/adminops/.kube/config"
+    remote_src: yes
+    owner: adminops
+    group: adminops
+    mode: '0644'
+
+- name: Install Flannel CNI
+  ansible.builtin.command: >
+    kubectl apply -f https://github.com/flannel-io/flannel/releases/latest/download/kube-flannel.yml
+  environment:
+    KUBECONFIG: /etc/kubernetes/admin.conf
+  register: flannel_result
+  changed_when: "'created' in flannel_result.stdout"
+
+- name: Allow pods to run on control-plane (Untaint nodes)
+  ansible.builtin.command: >
+    kubectl taint nodes --all node-role.kubernetes.io/control-plane-
+    node-role.kubernetes.io/master-
+  environment:
+    KUBECONFIG: /etc/kubernetes/admin.conf
+  failed_when: false
+  changed_when: false
+
+- name: Wait for Kubernetes API to be ready
+  ansible.builtin.wait_for:
+    host: localhost
+    port: 6443
+    delay: 5
+    timeout: 30
