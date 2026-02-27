@@ -11,4 +11,14 @@ baseline_packages:
   - htop
   - unzip
   - tree
+  - python3-pip
+  - software-properties-common
+  - ca-certificates
+  - gnupg2
+  - jq
+  - rsync
+  - dnsutils
+  - apt-transport-https
+  - bash-completion
+  - lsof            
 

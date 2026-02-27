@@ -1,9 +1,23 @@
 ---
-- name: Disable SWAP (Requisito de K8s)
+- name: Disable SWAP (Required for K8s)
   shell: |
     swapoff -a
     sed -i '/swap/d' /etc/fstab
   changed_when: false
+
+- name: Install containerd runtime
+  ansible.builtin.apt:
+    name: containerd
+    state: present
+    update_cache: yes
+
+- name: Configure containerd (SystemdCgroup)
+  ansible.builtin.shell: |
+    mkdir -p /etc/containerd
+    containerd config default > /etc/containerd/config.toml
+    sed -i 's/SystemdCgroup = false/SystemdCgroup = true/g' /etc/containerd/config.toml
+  notify: restart containerd
+# --------------------
 
 - name: Add Kubernetes GPG key
   get_url:

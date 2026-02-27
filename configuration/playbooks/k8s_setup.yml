@@ -1,8 +1,8 @@
 ---
-- name: Setup Kubernetes Cluster
+- name: Setup Kubernetes Cluster and GitOps
   hosts: all
   become: yes
   roles:
-    - os_baseline    
-    - docker          
-    - kubernetes       
+    - kubernetes
+    - argocd
+    - healthcheck    
