@@ -1,12 +1,13 @@
 ---
-- name: Update apt cache
-  ansible.builtin.apt:
-    update_cache: yes
-    cache_valid_time: 3600
-  tags: [apt, update]
-
-- name: Install baseline packages (Debian family)
+- name: Debian - Update and Install Packages
   ansible.builtin.apt:
     name: "{{ baseline_packages }}"
     state: present
-  tags: [packages]
+    update_cache: yes
+    cache_valid_time: 3600
+
+- name: Debian - Install Python Management Libraries
+  ansible.builtin.pip:
+    name: [kubernetes, pyyaml, jsonpatch]
+    state: present
+    executable: pip3

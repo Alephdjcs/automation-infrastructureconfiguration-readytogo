@@ -1,30 +1,54 @@
 ---
-- name: Load OS specific tasks
-  ansible.builtin.include_tasks: "{{ ansible_os_family | lower }}.yml"
+# 1. Kernel Preparation (Required for K8s networking)
+- name: OS Baseline - Configure Kernel Modules
+  community.general.modprobe:
+    name: "{{ item }}"
+    state: present
+  loop:
+    - overlay
+    - br_netfilter
+  tags: [kernel, k8s_prep]
 
-- name: Set swappiness
+- name: OS Baseline - Configure Sysctl Settings
   ansible.builtin.sysctl:
-    name: vm.swappiness
-    value: "{{ baseline_swappiness }}"
-    sysctl_set: true
+    name: "{{ item.name }}"
+    value: "{{ item.value }}"
     state: present
     reload: true
-  tags: [sysctl, optimization]
+  loop:
+    - { name: 'vm.swappiness', value: "{{ baseline_swappiness }}" }
+    - { name: 'net.bridge.bridge-nf-call-iptables', value: '1' }
+    - { name: 'net.ipv4.ip_forward', value: '1' }
+  tags: [sysctl, network]
 
-- name: Verify swappiness value
-  ansible.builtin.command: sysctl vm.swappiness
-  register: swappiness_output
+# 2. Package Installation (Triggers debian.yml or redhat.yml)
+- name: Load OS specific tasks
+  ansible.builtin.include_tasks: "{{ ansible_os_family | lower }}.yml"
+  tags: [packages]
+
+# 3. Python Environment Setup (Fixes the ArgoCD/K8s module error)
+- name: OS Baseline - Install Kubernetes Python Libraries
+  ansible.builtin.pip:
+    name: 
+      - kubernetes
+      - pyyaml
+      - jsonpatch
+    state: present
+  tags: [python, k8s_mgmt]
+
+# 4. Final Verifications
+- name: Verify baseline configuration
+  ansible.builtin.command: "{{ item }}"
+  register: verify_output
   changed_when: false
+  loop:
+    - "sysctl vm.swappiness"
+    - "git --version"
+    - "pip3 --version"
+  tags: [debug]
 
-- name: Print swappiness verification
+- name: Print verification results
   ansible.builtin.debug:
-    var: swappiness_output.stdout
-
-- name: Verify git installation
-  ansible.builtin.command: git --version
-  register: git_version
-  changed_when: false
-
-- name: Print git version
-  ansible.builtin.debug:
-    var: git_version.stdout
+    msg: "{{ item.stdout }}"
+  loop: "{{ verify_output.results }}"
+  tags: [debug]
